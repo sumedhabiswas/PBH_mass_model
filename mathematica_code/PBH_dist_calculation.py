@@ -539,15 +539,15 @@ dratio = 0.1
 
 #Integrations to determine the merger rates for different masses
 """
-HighMASSrate_sub = integrate.dblquad(lambda mB, ratio: finalrateM1(mB, ratio), mmin_a / 80, 1., lambda mB: mmin_a, lambda mB: 80., epsabs = 0.00075)
+HighMASSrate_sub = integrate.dblquad(lambda ratio, mB: finalrateM1(mB, ratio), mmin_a , 80., lambda mB: mmin_a / mB, lambda mB: 1., epsabs = 0.00075)
 HighMASSrate = HighMASSrate_sub[0]
 
-LowMASSrate_sub = integrate.dblquad(lambda mB, ratio: finalrateM1(mB, ratio), mmin_b / 5., 1., lambda mB: mmin_b, lambda mB: 5., epsabs = 0.00075)
+LowMASSrate_sub = integrate.dblquad(lambda ratio, mB: finalrateM1(mB, ratio), mmin_b , 5., lambda mB: mmin_b / mB, lambda mB: 1., epsabs = 0.00075)
 LowMASSrate = LowMASSrate_sub[0]
 
 Expectedlowmass = Highmassmes * (LowMASSrate / HighMASSrate)
 """
-HighMASSrate = 0.694
+HighMASSrate = 0.6994
 
 #Making the array of sub solar mass rates
 mA1 = np.arange(0.1, 3.1, dmass)
@@ -742,3 +742,56 @@ ax.plot_wireframe(X2, Y, Z2)
 plt.show()
 """
 
+#Defining the function needed for the plots
+def Eventlikd(mB, mA):
+    return finalrateM1c(mB, mA) * Detectability(mB, mA / mB)
+
+#Defining variables used in the plots
+logmA1 = np.linspace(1., 2.5, num = 25)
+logmB1 = np.linspace(1., 2.5, num = 25)
+LOGMA1, LOGMB1 = np.meshgrid(logmA1, logmB1)
+logmA2 = np.linspace(-0.5, 2.5, num = 25)
+logmB2 = np.linspace(-0.5, 2.5, num = 25)
+LOGMA2, LOGMB2 = np.meshgrid(logmA2, logmB2)
+logmA3 = np.linspace(-0.5, 0.8, num = 25)
+logmB3 = np.linspace(-0.5, 0.8, num = 25)
+LOGMA3, LOGMB3 = np.meshgrid(logmA3, logmB3)
+logmB4 = np.linspace(0., 2.5, num = 25)
+logmr = np.linspace(-2., 0., num = 25)
+LOGMR, LOGMB4 = np.meshgrid(logmr, logmB4)
+
+"""
+#Contour plots for the different mass regions
+plt.figure()
+plt.contourf(logmA1, logmB1, Eventlikd(10.**LOGMB1, 10.**LOGMA1), levels = 20)
+plt.xlabel('$log \ m_A$')
+plt.ylabel('$log \ m_B$')
+plt.show()
+
+plt.figure()
+plt.contourf(logmA2, logmB2, Eventlikd(10.**LOGMB2, 10.**LOGMA2), levels = 20)
+plt.xlabel('$m_1$')
+plt.ylabel('$m_2$')
+plt.show()
+
+plt.figure()
+plt.contourf(logmA3, logmB3, Eventlikd(10.**LOGMB3, 10.**LOGMA3), levels = 20)
+plt.xlabel('$log \ m_A$')
+plt.ylabel('$log \ m_B$')
+plt.show()
+
+plt.figure()
+plt.contourf(logmB4, logmr, Eventlikd(10.**LOGMB4, 10.**LOGMR * 10.**LOGMB4), levels = 20)
+plt.xlabel('$log \ m_B$')
+plt.ylabel('$log \ m_r$')
+plt.show()
+"""
+
+#Showing the values of figure 3 of the paper
+logmB = np.linspace(-0.5, 2.5, num = 4)
+logmA = np.linspace(-0.5, 2.5, num = 4)
+Fig3 = []
+for i in range(len(logmB)):
+    for j in range(len(logmA)):
+        Fig3.append(Eventlikd(10.**logmB[i], 10.**logmA[j]))
+print(Fig3)
