@@ -25,25 +25,25 @@ invsecondinkg = hbar / c**2
 h = 0.7
 H0 = h * 100000 / mpc                       #Hubble rate today in s^-1
 rhocr = (3 * H0**2) / (8 * np.pi * G)       #Critical density in kg  m^-3
-ar = 7.5657 * 10 **-16                      #Stephan's constant in J m^-3 K^-4
-T0 = 2.726                                  #In K
+ar = 7.5657 * 10 **-16                      #Radiation constant in J m^-3 K^-4
+T0 = 2.726                                  #Temperature of space in K
 Omega_b = 0.0456                            #Baryonic density parameter
 Omega_CDM = 0.245                           #Cold Dark Matter density parameter
-Omega_r = ar * T0**4 / rhocr / c**2         
+Omega_r = ar * T0**4 / rhocr / c**2         #Radiation density parameter        
 Nur = 3.046                                 #Number of relativistic degrees of freedom
-Omega_v = Omega_r * 7. / 8 * Nur * (4 / 11)**(4/3)
-Omega_Lambda = 1 - (Omega_CDM + Omega_b + Omega_r + Omega_v) 
+Omega_v = Omega_r * 7. / 8 * Nur * (4 / 11)**(4/3)              #Neutrino density parameter
+Omega_Lambda = 1 - (Omega_CDM + Omega_b + Omega_r + Omega_v)    #Dark energy density parameter 
 AU = 1.4960 * 10**11                        #Astronomical unit in m
-VolumeGpc = 10.**27
-eps0 = 13.605698                            #In eV
-kb = 8.617343 * 10**-5                      #In eV K^-1
-eVinJ = 1.60217 * 10**-19
+VolumeGpc = 10.**27                         #Gigaparsec volume in pc
+eps0 = 13.605698                            #Permittivity of free space in eV
+kb = 8.617343 * 10**-5                      #Boltzmann's constant in eV K^-1
+eVinJ = 1.60217 * 10**-19                   #One eV in J
 hp = 6.582 * 10**-16                        #Planck constant in eV s
 me = 510998                                 #Electron mass in eV
 mh = 938.272 * 10**6                        #Proton mass in eV
 mproton = 1.67 * 10**-27                    #Proton mass in kg
-Omr = ar * T0**4 / rhocr / c**2
-sigmaT = 6.652462 * 10**-29                 #Thomson cross section in m^2
+Omr = ar * T0**4 / rhocr / c**2             #Radiation density parameter
+sigmaT = 6.652462 * 10**-29                 #Thomson cross section in m^2 for an electron
 fHe = 0.24                                  #Helium fraction
 eVenJ = 1.6022 * 10**-19                    #eV in J
 T21 = 0.068                                 #21 cm transition temperature in K
@@ -74,7 +74,7 @@ def H(a):
 def aa(z):
     return 1 / (z + 1)
 
-#
+#Horizon mass as a function of the scale factor
 def HMass(a):
     return (3 * H(a)**2 / (8 * np.pi * G)) * (H(a) / c)**-3
 
@@ -95,7 +95,7 @@ def HmassofT(rhoQCDbis):
 #Importing the Thermal history from arXiv
 dir = r"C:\Users\Joren\Documents\BONZ\PBH_mass_model\data_files\\"
 file_1 = dir + 'wofdata_py.txt'
-wofTdata = np.genfromtxt(file_1, delimiter = '\t')
+wofTdata = np.genfromtxt(file_1, delimiter = '\t')          #First column is temperature in MeV and second column is equation-of-state parameter (w)
 
 #Importing the preperation data for the spline interpolation
 file_2 = dir + 'prepaforspline_py.txt'
@@ -165,11 +165,11 @@ mPBH_ = np.geomspace(10**-9, 10**8, num = 150)      #Range of the PBH masses
 wQCDbis = interpolate.interp1d(wofTdata[:,0], wofTdata[:,1], kind = 'linear', fill_value = 'extrapolate')
 
 #Spline interpolation of the list of rho's
-rhoQCDbis_prep = interpolate.splrep(rholist_first, rholist_second, s = 0)
+rhoQCDbis_prep = interpolate.splrep(rholist_first, rholist_second, k = 3, s = 0)
 rhoQCDbis = interpolate.splev(logT, rhoQCDbis_prep, der = 0)
 
 #Spline interpolation of the list of rhoGeV4's
-rhoGeV4QCDbis_prep = interpolate.splrep(rhoGeV4list_first, rhoGeV4list_second, s = 0)
+rhoGeV4QCDbis_prep = interpolate.splrep(rhoGeV4list_first, rhoGeV4list_second, k = 3, s = 0)
 rhoGeV4QCDbis = interpolate.splev(x_, rhoGeV4QCDbis_prep, der = 0)
 
 #Making the arrays
@@ -216,10 +216,13 @@ wofTinMeV = interpolate.interp1d(wofT_first, wofT_second, kind = 'cubic', fill_v
 #3rd order interpolation of the PBH masses from wofMtest
 wofPBHmasstest = interpolate.interp1d(wofMtest_first, wofMtest_second, kind = 'cubic', fill_value = 'extrapolate')
 
+
 #Showing the interpolation of the wofTdata
 """
 plt.plot(T_, wQCDbis(T_),  'r-')
 plt.xscale('log')
+plt.xlabel('$T(MeV)$')
+plt.ylabel('$w$')
 plt.show()
 """
 
@@ -254,16 +257,16 @@ plt.show()
 #Defining some constants for scenario a
 gamma = 1.                          #Gamma factor
 Amplitude_a = 2.20 * 10**-2         #Spectral amplitude
-n_s_a = 0.96                        #Spectral amplitude
+n_s_a = 0.96                        #Spectral index
 MHeq = 2.8 * 10**17                 #Horizon mass at matter-radiation equality
 
 #Defining functions
 
-#Function to calculate sigma squared
+#Function to calculate sigma / delta_rms squared (eq. 5)
 def sigmasq_a(mPBH):
     return Amplitude_a * (mPBH / 1.)**(-(n_s_a - 1) / 2)
 
-#Fraction of horizon patches undergoing collapse to PBHs when temperature is T
+#Fraction of horizon patches undergoing collapse to PBHs when temperature is T (eq. 1)
 def betaM0a(mPBH):
     return special.erfc(zetacr(mPBH) / np.sqrt(2 * sigmasq_a(mPBH))) / 2
 
@@ -271,7 +274,7 @@ def betaM0a(mPBH):
 def betaeq_a(mPBH):
     return (MHeq / mPBH)**(1/2) * betaM0a(gamma * mPBH)
 
-#Fraction of PBHs 
+#Fraction of PBHs (eq. 4)
 def fofmPBHM0a(mPBH):
     return betaeq_a(mPBH) * 2 / (Omega_CDM / (Omega_CDM + Omega_b))
 
@@ -322,15 +325,15 @@ plt.show()
 
 #Defining constants for scenario b
 Amplitude_b = 2.19 * 10**-2         #Spectral amplitude
-n_s_b = 0.97                        #Spectral amplitude
+n_s_b = 0.97                        #Spectral index
 
 #Defining functions
 
-#Function to calculate sigma squared
+#Function to calculate sigma / delta_rms squared (eq. 5)
 def sigmasq_b(mPBH):
     return Amplitude_b * (mPBH / 1.)**(-(n_s_b - 1) / 2)
 
-#Fraction of horizon patches undergoing collapse to PBHs when temperature is T
+#Fraction of horizon patches undergoing collapse to PBHs when temperature is T (eq. 1)
 def betaM0b(mPBH):
     return special.erfc(zetacr(mPBH) / np.sqrt(2 * sigmasq_b(mPBH))) / 2
 
@@ -338,7 +341,7 @@ def betaM0b(mPBH):
 def betaeq_b(mPBH):
     return (MHeq / mPBH)**(1/2) * betaM0b(gamma * mPBH)
 
-#Fraction of PBHs 
+#Fraction of PBHs (eq. 4)
 def fofmPBHM0b(mPBH):
     return betaeq_b(mPBH) * 2 / (Omega_CDM / (Omega_CDM + Omega_b))
 
@@ -383,15 +386,15 @@ plt.show()
 
 #Defining constants for scenario c
 Amplitude_c = 2.19 * 10**-2         #Spectral amplitude
-n_s_c = 0.95                        #Spectral amplitude
+n_s_c = 0.95                        #Spectral index
 
 #Defining functions
 
-#Function to calculate sigma squared
+#Function to calculate sigma / delta_rms squared (eq. 5)
 def sigmasq_c(mPBH):
     return Amplitude_c * (mPBH / 1.)**(-(n_s_c - 1) / 2)
 
-#Fraction of horizon patches undergoing collapse to PBHs when temperature is T
+#Fraction of horizon patches undergoing collapse to PBHs when temperature is T (eq. 1)
 def betaM0c(mPBH):
     return special.erfc(zetacr(mPBH) / np.sqrt(2 * sigmasq_c(mPBH))) / 2
 
@@ -399,7 +402,7 @@ def betaM0c(mPBH):
 def betaeq_c(mPBH):
     return (MHeq / mPBH)**(1/2) * betaM0c(gamma * mPBH)
 
-#Fraction of PBHs 
+#Fraction of PBHs (eq. 4) 
 def fofmPBHM0c(mPBH):
     return betaeq_c(mPBH) * 2 / (Omega_CDM / (Omega_CDM + Omega_b))
 
@@ -485,8 +488,8 @@ plt.show()
 #Defining constants
 vmean = 2000.               #Mean velocity
 gammaPBH = 0.7              #Ratio between PBH and horizon masses
-Enhfactor = 10.**9          #
-VolumeGpc = 10.**27         #
+Enhfactor = 10.**9          #Enhance factor
+VolumeGpc = 10.**27         #Gigaparsec volume in pc
 
 #Functions
 #PBH density
@@ -497,7 +500,7 @@ def rho_PBH(logmPBH):
 def nPBH(logmPBH):
     return Enhfactor * rho_PBH(logmPBH) / msun / (10.**logmPBH) * (mpc/ 10**6)**3
 
-#
+#Sub-function for the PBH merger rate
 def rate3(mPBH, ratio):
     return nPBH(np.log10(ratio * mPBH)) * vmean * 2. * np.pi * (85. * np.pi / 6 / np.sqrt(2))**(2/7) * G**2 * (mPBH * msun + ratio * mPBH * msun)**(10/7) * (mPBH * ratio * mPBH * msun**2)**(2/7) / c**4 * (vmean / c)**(-18/7) / (mpc / 10**6)**3 * year
 
@@ -539,19 +542,25 @@ dratio = 0.1
 
 #Integrations to determine the merger rates for different masses
 """
+#Determining the merger rates for high masses
 HighMASSrate_sub = integrate.dblquad(lambda ratio, mB: finalrateM1(mB, ratio), mmin_a , 80., lambda mB: mmin_a / mB, lambda mB: 1., epsabs = 0.00075)
 HighMASSrate = HighMASSrate_sub[0]
 
+#Determining the merger rates for low masses
 LowMASSrate_sub = integrate.dblquad(lambda ratio, mB: finalrateM1(mB, ratio), mmin_b , 5., lambda mB: mmin_b / mB, lambda mB: 1., epsabs = 0.00075)
 LowMASSrate = LowMASSrate_sub[0]
 
 Expectedlowmass = Highmassmes * (LowMASSrate / HighMASSrate)
 """
+#Result from the integration above used to save computation time
 HighMASSrate = 0.6994
 
-#Making the array of sub solar mass rates
+
+#Arrays of the mass ranges
 mA1 = np.arange(0.1, 3.1, dmass)
 mB1 = np.arange(0.1, 3.1, dmass)
+
+#Making the array of sub solar mass rates
 ratessubsolM1 = []
 for j in range(len(mA1)):
     for i in range(len(mB1)):
@@ -563,18 +572,19 @@ for j in range(len(mA1)):
             third = 0
         ratessubsolM1.append([first, second, third])
 ratessubsolM1 = np.array(ratessubsolM1)
-
-#PLotting the sub solar mass rates in a 3D plot
 """
+#PLotting the sub solar mass rates in a 3D plot
 plt.figure()
 ax = plt.axes(projection = '3d')
 ax.scatter(ratessubsolM1[:,0], ratessubsolM1[:,1], ratessubsolM1[:,2])
 plt.show()
 """
 
-#Making the array of solar mass rates
+#Arrays of the mass ranges
 mA2 = np.arange(10., 160., dmass2)
 mB2 = np.arange(10., 160., dmass2)
+
+#Making the array of solar mass rates
 ratessolM1 = []
 for j in range(len(mA2)):
     for i in range(len(mB2)):
@@ -592,8 +602,8 @@ O1 = np.array([[2.**(-1/5) * 0.2, 10**6], [2.**(-1/5) * 0.3, 4. * 10**5], [2.**(
 O2 = np.array([[2.**(-1/5) * 0.2, 3.5 * 10**5], [2.**(-1/5) * 0.3, 10**5], [2.**(-1/5) * 0.4, 5 * 10**4], [2.**(-1/5) * 0.5, 3 * 10**4], [2.**(-1/5) * 0.6, 2 * 10**4], [2.**(-1/5) * 0.7, 1.5 * 10**4], [2.**(-1/5) * 0.8, 9 * 10**3], [2.**(-1/5) * 0.9, 7 * 10**3], [2.**(-1/5), 6. * 10**3]])
 
 #Making interpolations of the O1 and O2 data
-ratelimitsO1 = interpolate.interp1d(O1[:,0], O1[:, 1], fill_value = 'extrapolate')
-ratelimitsO2 = interpolate.interp1d(O2[:,0], O2[:, 1], fill_value = 'extrapolate')
+ratelimitsO1 = interpolate.interp1d(O1[:,0], O1[:, 1], kind = 'cubic', fill_value = 'extrapolate')
+ratelimitsO2 = interpolate.interp1d(O2[:,0], O2[:, 1], kind = 'cubic', fill_value = 'extrapolate')
 
 #Defining step constants
 dm = 0.1
@@ -672,8 +682,8 @@ plt.show()
 for i in range(len(LIGOnoise)):
     LIGOnoise[i,1] = LIGOnoise[i,1] * np.sqrt(LIGOnoise[i,0])
 
-#Interpolating the logarithm noise data
-LIGOnoiseInterp = interpolate.interp1d(np.log10(LIGOnoise[:,0]), np.log10(LIGOnoise[:,1]), fill_value = 'extrapolate')
+#Interpolating the logarithm of the noise data
+LIGOnoiseInterp = interpolate.interp1d(np.log10(LIGOnoise[:,0]), np.log10(LIGOnoise[:,1]), kind = 'cubic', fill_value = 'extrapolate')
 
 #Defining the max frequency function
 def fmax(mB, ratio):
@@ -689,7 +699,7 @@ plt.show()
 sqrtSfunction = LIGOnoise
 
 #Again, interpolating the noise data
-sqrtSfunctionInterp = interpolate.interp1d(np.log10(sqrtSfunction[:,0]), np.log10(sqrtSfunction[:,1]), fill_value = 'extrapolate')
+sqrtSfunctionInterp = interpolate.interp1d(np.log10(sqrtSfunction[:,0]), np.log10(sqrtSfunction[:,1]), kind = 'cubic', fill_value = 'extrapolate')
 
 #Defining variables used in the spline interpolation below
 logfmax = np.arange(np.log10(20.), np.log10(2000.) + 0.1, 0.1)
@@ -703,19 +713,23 @@ for i in range(len(logfmax)):
     integrant_list.append([first, second])
 integrant_list = np.array(integrant_list)
 
-#Doing the spline interpolation
+#Doing the preparation for the spline interpolation
 integrant_prep = interpolate.splrep(integrant_list[:,0], integrant_list[:,1], s = 0)
 
 #Defining the functions needed for the 3D plots
+#Doing the spline interpolation
 def integrant(x_spl):
     return interpolate.splev(x_spl, integrant_prep, der = 0)
 
+#Calculating the integrand
 def integrant2(mB, mA):
     return (mB * mA / (mA + mB))**2 * 10**integrant(np.log10(fmax(mB, mA / mB)))
 
+#Taking the square root of the integrand
 def Rmaxcorrected(mB, mA):
     return integrant2(mB, mA)**(1/2)
 
+#Calculating the detectability
 def Detectability(mB, ratio):
     return Rmaxcorrected(mB, ratio * mB)**3
 
@@ -742,11 +756,11 @@ ax.plot_wireframe(X2, Y, Z2)
 plt.show()
 """
 
-#Defining the function needed for the plots
+#Defining the function that calculates the likelihood of an detectable event
 def Eventlikd(mB, mA):
     return finalrateM1c(mB, mA) * Detectability(mB, mA / mB)
 
-#Defining variables used in the plots
+#Defining the variables (mass ranges) used in the plots
 logmA1 = np.linspace(1., 2.5, num = 25)
 logmB1 = np.linspace(1., 2.5, num = 25)
 LOGMA1, LOGMB1 = np.meshgrid(logmA1, logmB1)
@@ -760,28 +774,49 @@ logmB4 = np.linspace(0., 2.5, num = 25)
 logmr = np.linspace(-2., 0., num = 25)
 LOGMR, LOGMB4 = np.meshgrid(logmr, logmB4)
 
+#Running the functions for the first three contour plots
+L1 = Eventlikd(10.**LOGMB1, 10.**LOGMA1)
+L2 = Eventlikd(10.**LOGMB2, 10.**LOGMA2)
+L3 = Eventlikd(10.**LOGMB3, 10.**LOGMA3)
+
+#Exclude mA < mB for the first three contour plots
+for i in range(len(logmB1)):
+    for j in range(len(logmA1)):
+        if logmB1[j] > logmA1[i]:
+            L1[j][i] = np.nan
+
+for i in range(len(logmB2)):
+    for j in range(len(logmA2)):
+        if logmB2[j] > logmA2[i]:
+            L2[j][i] = np.nan
+
+for i in range(len(logmB3)):
+    for j in range(len(logmA3)):
+        if logmB3[j] > logmA3[i]:
+            L3[j][i] = np.nan
+
 """
 #Contour plots for the different mass regions
 plt.figure()
-plt.contourf(logmA1, logmB1, Eventlikd(10.**LOGMB1, 10.**LOGMA1), levels = 20)
+plt.contourf(logmA1, logmB1, L1, levels = 20)
 plt.xlabel('$log \ m_A$')
 plt.ylabel('$log \ m_B$')
 plt.show()
 
 plt.figure()
-plt.contourf(logmA2, logmB2, Eventlikd(10.**LOGMB2, 10.**LOGMA2), levels = 20)
-plt.xlabel('$m_1$')
-plt.ylabel('$m_2$')
+plt.contourf(logmA2, logmB2, L2, levels = 20)
+plt.xlabel('$log \ m_1$')
+plt.ylabel('$log \ m_2$')
 plt.show()
 
 plt.figure()
-plt.contourf(logmA3, logmB3, Eventlikd(10.**LOGMB3, 10.**LOGMA3), levels = 20)
+plt.contourf(logmA3, logmB3, L3, levels = 20)
 plt.xlabel('$log \ m_A$')
 plt.ylabel('$log \ m_B$')
 plt.show()
 
 plt.figure()
-plt.contourf(logmB4, logmr, Eventlikd(10.**LOGMB4, 10.**LOGMR * 10.**LOGMB4), levels = 20)
+plt.contourf(logmB4, logmr, Eventlikd(10.**LOGMB4, 10.**LOGMR * 10**LOGMB4), levels = 20)
 plt.xlabel('$log \ m_B$')
 plt.ylabel('$log \ m_r$')
 plt.show()
