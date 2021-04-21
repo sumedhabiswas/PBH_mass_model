@@ -109,6 +109,18 @@ deltaMusco = np.genfromtxt(file_3, delimiter = ',')
 file_4 = dir + 'noise_LIGOVirgoc.txt'
 LIGOnoise = np.genfromtxt(file_4)
 
+#Importing the Mathematica values for the a scenario plot
+file_5 = dir + 'Math_a.txt'
+Math_a = np.genfromtxt(file_5)
+
+#Importing the Mathematica values for the b scenario plot
+file_6 = dir + 'Math_b.txt'
+Math_b = np.genfromtxt(file_6)
+
+#Importing the Mathematica values for the c scenario plot
+file_7 = dir + 'Math_c.txt'
+Math_c = np.genfromtxt(file_7)
+
 #Plotting wofTdata
 """
 plt.plot(wofTdata[:,0], wofTdata[:,1], 'b.')
@@ -226,8 +238,11 @@ plt.ylabel('$w$')
 plt.show()
 """
 
-#Interpolating of the deltaMusco data
+#Interpolation of the deltaMusco data using the normal interp1d function
 deltaofwMusco = interpolate.interp1d(deltaMusco[:,0], deltaMusco[:,1], kind = 'cubic', fill_value = 'extrapolate')
+
+#Second way of interpolating the deltaMusco data using the PCHIP interpolator
+#deltaofwMusco = interpolate.PchipInterpolator(deltaMusco[:,0], deltaMusco[:,1], extrapolate = 'yes')
 
 #Defining the function to interpolate the deltaMusco data from the PBH test mass interpolation
 def deltaofmPBHMusco(mPBH):
@@ -482,6 +497,26 @@ plt.xscale('log')
 plt.yscale('log')
 plt.show()
 """
+
+#Plotting the %differences between Mathematica and Python
+
+#The Python values for the three scenarios
+pyth_a = fofmPBHM0a(mPBHplot)
+pyth_b = fofmPBHM0b(mPBHplot)
+pyth_c = fofmPBHM0c(mPBHplot)
+
+plt.figure()
+plt.plot(mPBHplot, np.abs(Math_c - pyth_c) / ((Math_c + pyth_c)/2) * 100, 'b-', label = '$n_s$ = 0.95')
+plt.plot(mPBHplot, np.abs(Math_a - pyth_a) / ((Math_a + pyth_a)/2) * 100, 'r-', label = '$n_s$ = 0.96')
+plt.plot(mPBHplot, np.abs(Math_b - pyth_b) / ((Math_b + pyth_b)/2) * 100, 'y-', label = '$n_s$ = 0.97')
+plt.legend(loc = 'upper right')
+plt.ylabel('$percentage \ difference$')
+plt.xlabel(r'$PBH \ mass \ M (M_{\odot})$')
+plt.xscale('log')
+#plt.xlim(10**-3, 10**9)
+#plt.ylim(-.5, 5)
+plt.show()
+
 
 ##Merging rates
 
